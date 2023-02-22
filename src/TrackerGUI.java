@@ -25,7 +25,8 @@ public class TrackerGUI extends JFrame implements ActionListener {
             System.out.println("tasks exist");
             StringBuilder toDisplay = new StringBuilder();
             for (int i = 0; i < tList.taskNames.size(); i++) {
-                toDisplay.append(tList.taskNames.get(i) + '\n');
+                toDisplay.append(tList.taskNames.get(i));
+                toDisplay.append('\n');
                 System.out.println("Added task: " + tList.taskNames.get(i));
             }
             display.setText(toDisplay.toString());
