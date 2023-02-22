@@ -30,9 +30,8 @@ public class TrackerGUI extends JFrame implements ActionListener {
             }
             display.setText(toDisplay.toString());
         }
-        //invalidate();
-        //validate();
-        //repaint();
+        revalidate();
+        repaint();
     }
 
     @Override
