@@ -14,14 +14,13 @@ public class TrackerGUI extends JFrame implements ActionListener {
         add(taskPanel, BorderLayout.NORTH);
     }
 
-    public void updateTaskPanel(){
+    public void updateTaskPanel() {
         JLabel display = new JLabel();
 
-        if(tList.taskNames.size() == 0){
+        if (tList.taskNames.size() == 0) {
             System.out.println("no tasks");
             display.setText("There are now tasks yet, try adding one!");
-        }
-        else {
+        } else {
             System.out.println("tasks exist");
             StringBuilder toDisplay = new StringBuilder();
             for (int i = 0; i < tList.taskNames.size(); i++) {
