@@ -1,18 +1,23 @@
+import javax.swing.*;
+import java.awt.*;
 import java.util.ArrayList;
 
 public class TaskList {
-    ArrayList<String> taskNames;
-    ArrayList<Boolean> taskComplete;
+    final int Max_Task_Length = 30;
+    ArrayList<JCheckBox> tasks;
 
-    public TaskList() {
-        taskNames = new ArrayList<String>();
-        taskComplete = new ArrayList<Boolean>();
+    public TaskList(){
+        tasks = new ArrayList<>();
     }
 
     //Adds a new task, assumes the task is incomplete by default
     public void addTask(String tn) {
-        taskNames.add(tn);
-        taskComplete.add(false);
+        int bufferLength = Max_Task_Length - tn.length();
+        String bufferedtn = tn + (new String(new char[bufferLength]).replace('\0', ' '));
+        JCheckBox cBox = new JCheckBox(bufferedtn, false);
+        cBox.setHorizontalTextPosition(SwingConstants.LEFT);
+        cBox.setMargin(new Insets(0, 20, 0, 100));
+        tasks.add(cBox);
     }
 
     /**
@@ -21,7 +26,10 @@ public class TaskList {
      * @return boolean value
      */
     public boolean isTask(String tn) {
-        boolean ans = taskNames.contains(tn);
+        boolean ans = false;
+        for (JCheckBox cBox: tasks)
+            if(cBox.getText().equals(tn))
+                ans = true;
         if(!ans)
             System.out.println("No task with such a name exists.");
         return ans;
@@ -34,31 +42,25 @@ public class TaskList {
      *                  1: remove
      *                  2: finish
      *                  3: reset
-     * @return boolean value - if edit operation was performed
      */
-    public boolean editTask(String tn, int action) {
-        boolean ans = isTask(tn);
-        if (ans) {
-            int taskIndex = taskNames.indexOf(tn);
+    public void editTask(String tn, int action) {
+        if (isTask(tn)) {
+            int taskIndex = -1;
+            for (int i = 0; i < tasks.size(); i++) {
+                if (tasks.get(i).getText().equals(tn))
+                    taskIndex = i;
+            }
             switch (action) {
-                case 1: //remove
-                    taskNames.remove(taskIndex);
-                    taskComplete.remove(taskIndex);
-                    break;
-                case 2: //finish
-                    taskComplete.set(taskIndex, true);
-                    break;
-                case 3: //reset
-                    taskComplete.set(taskIndex, false);
+                case 1 -> tasks.remove(taskIndex); //remove
+                case 2 -> tasks.get(taskIndex).setSelected(true); //finish
+                case 3 -> tasks.get(taskIndex).setSelected(false); //reset
             }
         }
-        return ans;
     }
 
     public void printTaskList(){
-        for (int i=0; i<taskNames.size(); i++){
-            System.out.println("Task: " + taskNames.get(i) + ", Complete: " + taskComplete.get(i));
-        }
+        for (JCheckBox cBox: tasks)
+            System.out.println("Task: " + cBox.getText() + ", Complete: " + cBox.isSelected());
     }
 
     public static void main(String[] args) {
