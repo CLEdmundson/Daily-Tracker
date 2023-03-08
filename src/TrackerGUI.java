@@ -8,79 +8,142 @@ import java.awt.font.TextAttribute;
 import java.util.Enumeration;
 import java.util.Map;
 
-public class TrackerGUI extends JFrame implements ActionListener, ItemListener {
+public class TrackerGUI extends JFrame implements ActionListener {
     static TaskList tList;
-    JPanel taskPanel;
+    JPanel taskPanel, buttonPanel;
     JCheckBox lastClicked;
 
     public TrackerGUI(String wName) {
         super(wName);
         tList = new TaskList();
         tList.loadTasks();
-        taskPanel = new JPanel();
-        taskPanel.setLayout(new BoxLayout(taskPanel, BoxLayout.Y_AXIS));
+        taskPanel = setupTaskPanel();
         add(taskPanel, BorderLayout.NORTH);
+        buttonPanel = setupButtonPanel(); // Never used outside initial setup
+        add(buttonPanel, BorderLayout.SOUTH);
     }
 
-    public void updateTaskPanel() {
-        // Clean the old taskList
-        taskPanel.removeAll();
+    /**
+     * Makes a Task Panel and adds any loaded tasks to the panel as JCheckBoxes
+     *
+     * @return The created Task Panel
+     */
+    public JPanel setupTaskPanel(){
+        JPanel tPanel = new JPanel();
+        tPanel.setLayout(new BoxLayout(tPanel, BoxLayout.Y_AXIS));
+        // In the event any tasks were loaded, adds them to the taskPanel
+        if (!tList.isEmpty()) {
+            for (JCheckBox cBox : tList.tasks) {
+                setStatusFont(cBox);
+                cBox.addActionListener(this);
+                tPanel.add(cBox);
+            }
+        } else { updateTaskPanel(); }
 
+        return tPanel;
+    }
+
+    /**
+     * Makes a Button Panel and adds interaction buttons:
+     *  Add Task
+     *  Remove Task
+     *
+     * @return The created Button Panel
+     */
+    public JPanel setupButtonPanel(){
+        JPanel bPanel = new JPanel(new GridLayout(1, 2));
+
+        JButton addTaskButton = new JButton("Add Task");
+        addTaskButton.addActionListener(this);
+        addTaskButton.setActionCommand("newTask");
+
+        JButton removeTaskButton = new JButton("Remove Task");
+        removeTaskButton.addActionListener(this);
+        removeTaskButton.setActionCommand("removeTask");
+
+        bPanel.add(addTaskButton);
+        bPanel.add(removeTaskButton);
+
+        return bPanel;
+    }
+
+    /**
+     * Adds filler text to taskPanel in the event there are no tasks in the taskList
+     */
+    public void updateTaskPanel() {
         if (tList.tasks.size() == 0) {
             JLabel display = new JLabel("There are no tasks yet, try adding one!");
-
+            // Add padding to JLabel to keep taskPanel width consistent
             Border border = display.getBorder();
             Border margin = new EmptyBorder(2, 20, 2, 44);
             display.setBorder(new CompoundBorder(border, margin));
+            // Add the filler text to the taskPanel
             taskPanel.add(display, BorderLayout.WEST);
-        } else {
-            for (JCheckBox cBox : tList.tasks) {
-                setStatusFont(cBox);
-                cBox.addActionListener((TrackerGUI) SwingUtilities.windowForComponent(taskPanel));
-                taskPanel.add(cBox);
-            }
         }
-
-        revalidate();
-        repaint();
-        pack();
     }
 
+    /**
+     * Checks status and changes the font on the JCheckBox to
+     *  contain STRIKETHROUGH if selected
+     *  remove STRIKETHROUGH if unselected
+     *
+     * @param cBox JCheckBox to check status and change font
+     */
     public void setStatusFont(JCheckBox cBox){
-        // TODO: Fix warnings around the attributes Map
-        // TODO: Make completed status more visual i.e. font color
-
         @SuppressWarnings("unchecked")
         Map<TextAttribute, Boolean> attributes = (Map<TextAttribute, Boolean>) cBox.getFont().getAttributes();
         attributes.put(TextAttribute.STRIKETHROUGH, cBox.isSelected());
         cBox.setFont(new Font(attributes));
-
-        revalidate();
-        repaint();
-        pack();
-    }
-
-    @Override
-    public void itemStateChanged(ItemEvent ie) {
-        System.out.println(ie.getSource());
+        if(cBox.isSelected()) {
+            cBox.setForeground(Color.GRAY);
+        } else {
+            cBox.setForeground(Color.BLACK);
+        }
+        updateWindow();
     }
 
     @Override
     public void actionPerformed(ActionEvent ae) {
         if (ae.getSource() instanceof JCheckBox cBox) {
+            if (lastClicked != null)
+                lastClicked.setBackground(Color.WHITE);
             lastClicked = cBox;
+            lastClicked.setBackground(Color.lightGray);
             setStatusFont(cBox);
         }
         String action = ae.getActionCommand();
         if (action.equals("newTask")) {
             String newTask = JOptionPane.showInputDialog("Task Name: ");
-            tList.addTask(newTask);
-            updateTaskPanel();
+            if(newTask != null) {
+                // Make a new task, add it to the window, update the window
+                JCheckBox cBox = tList.addTask(newTask);
+                setStatusFont(cBox);
+                cBox.addActionListener((TrackerGUI) SwingUtilities.windowForComponent(taskPanel));
+                taskPanel.add(cBox);
+                updateTaskPanel();
+                updateWindow();
+            } // else the action was canceled
         }
         if (action.equals("removeTask")) {
-            tList.tasks.remove(lastClicked);
-            updateTaskPanel();
+            // Throw a confirmation dialog to confirm the removal of the last task
+            if(lastClicked!=null) {
+                int confirm = JOptionPane.showOptionDialog(
+                        null, "Remove Task: " + lastClicked.getText().trim() + "?",
+                        "Remove Confirmation", JOptionPane.YES_NO_OPTION,
+                        JOptionPane.QUESTION_MESSAGE, null, null, null);
+                if (confirm == 0) {
+                    tList.tasks.remove(lastClicked);
+                    taskPanel.remove(lastClicked);
+                    updateWindow();
+                }
+            }
         }
+    }
+
+    public void updateWindow() {
+        revalidate();
+        repaint();
+        pack();
     }
 
     public static void setUIFont(javax.swing.plaf.FontUIResource f) {
@@ -101,7 +164,7 @@ public class TrackerGUI extends JFrame implements ActionListener, ItemListener {
             @Override
             public void windowClosing(WindowEvent e) {
                 int confirm = JOptionPane.showOptionDialog(
-                        null, "Are You Sure to Close Application?",
+                        null, "Close Application?",
                         "Exit Confirmation", JOptionPane.YES_NO_OPTION,
                         JOptionPane.QUESTION_MESSAGE, null, null, null);
                 if (confirm == 0) {
@@ -111,23 +174,6 @@ public class TrackerGUI extends JFrame implements ActionListener, ItemListener {
             }
         });
 
-
-        frame.updateTaskPanel();
-
-        JPanel buttonPanel = new JPanel(new GridLayout(1, 2));
-
-        JButton addTaskButton = new JButton("Add Task");
-        addTaskButton.addActionListener(frame);
-        addTaskButton.setActionCommand("newTask");
-
-        JButton removeTaskButton = new JButton("Remove Task");
-        removeTaskButton.addActionListener(frame);
-        removeTaskButton.setActionCommand("removeTask");
-
-        buttonPanel.add(addTaskButton);
-        buttonPanel.add(removeTaskButton);
-
-        frame.add(buttonPanel, BorderLayout.SOUTH);
         frame.pack();
         frame.setVisible(true);
     }
