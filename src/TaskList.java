@@ -46,35 +46,14 @@ public class TaskList {
         return ans;
     }
 
-    /**
-     * Edit a preexisting task in the TaskList
-     *
-     * @param tn     name of the task to be edited
-     * @param action action to be performed on the task
-     *               1: remove
-     *               2: finish
-     *               3: reset
-     */
-    public void editTask(String tn, int action) {
-        if (isTask(tn)) {
-            int taskIndex = -1;
-            for (int i = 0; i < tasks.size(); i++) {
-                if (tasks.get(i).getText().equals(tn))
-                    taskIndex = i;
-            }
-            switch (action) {
-                case 1 -> tasks.remove(taskIndex); //remove
-                case 2 -> tasks.get(taskIndex).setSelected(true); //finish
-                case 3 -> tasks.get(taskIndex).setSelected(false); //reset
-            }
-        }
-    }
-
     public void printTaskList() {
         for (JCheckBox cBox : tasks)
             System.out.println("Task: " + cBox.getText() + ", Complete: " + cBox.isSelected());
     }
 
+    /**
+     *
+     */
     public void createSaveFile() {
         System.out.println("File does not exist, creating file...");
         File f = new File(FILENAME);
@@ -89,6 +68,9 @@ public class TaskList {
         }
     }
 
+    /**
+     *
+     */
     public void loadTasks() {
         // TODO: Check if day has passes and reset complete status if so
         File f = new File(FILENAME);
@@ -104,6 +86,12 @@ public class TaskList {
         }
     }
 
+    /**
+     * Saves the tasks in the TaskList to file specified by FILENAME variable
+     * which is specified at the top of TaskList class
+     * File structure of saved tasks is as follows:
+     * "Task_Name,Task_Status" without quotes and followed by a new line
+     */
     public void saveTasks() {
         try {
             FileWriter myWriter = new FileWriter(FILENAME);
@@ -122,22 +110,5 @@ public class TaskList {
     public static void main(String[] args) {
         // TODO: Add method and inline comments
         TaskList tList = new TaskList();
-
-        // Add Tasks
-        tList.addTask("Task 1");
-        tList.addTask("Task 2");
-        tList.addTask("Task 2");
-        tList.addTask("Task 3");
-        tList.addTask("Task 4");
-
-        // Test Functions
-        tList.printTaskList();
-        tList.editTask("Task 2", 2);
-        tList.editTask("Task 3", 2);
-        tList.printTaskList();
-        tList.editTask("Task 3", 1);
-        tList.editTask("Fake Task", 1);
-
-        tList.printTaskList();
     }
 }
